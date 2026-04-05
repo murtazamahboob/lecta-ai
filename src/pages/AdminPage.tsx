@@ -51,7 +51,7 @@ export default function AdminPage() {
       .from("user_roles")
       .delete()
       .eq("user_id", userId)
-      .eq("role", role);
+      .eq("role", role as any);
     if (error) {
       toast.error("Failed to remove role");
     } else {
