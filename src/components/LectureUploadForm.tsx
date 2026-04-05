@@ -148,7 +148,7 @@ export default function LectureUploadForm() {
 
         {/* Status messages */}
         {status === "success" && (
-          <div className="flex items-center gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 text-sm text-emerald-400">
+          <div className="flex items-center gap-2 rounded-lg bg-success/10 border border-success/20 px-4 py-3 text-sm text-success-foreground">
             <CheckCircle2 className="h-4 w-4 shrink-0" />
             Lecture sent successfully!
           </div>
