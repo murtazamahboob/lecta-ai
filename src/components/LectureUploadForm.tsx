@@ -2,6 +2,8 @@ import { useState, useRef } from "react";
 import { Upload, Send, Loader2, CheckCircle2, AlertCircle, Mic, FileAudio } from "lucide-react";
 import AudioRecorderCard from "./AudioRecorderCard";
 import EmailTagsInput from "./EmailTagsInput";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const WEBHOOK_URL = "https://new9653.app.n8n.cloud/webhook-test/lecture-ghost";
 const ACCEPTED = ".mp3,.wav,.webm";
@@ -9,6 +11,7 @@ const ACCEPTED = ".mp3,.wav,.webm";
 type Status = "idle" | "loading" | "success" | "error";
 
 export default function LectureUploadForm() {
+  const { user } = useAuth();
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [subject, setSubject] = useState("");
@@ -39,6 +42,19 @@ export default function LectureUploadForm() {
 
       const res = await fetch(WEBHOOK_URL, { method: "POST", body: formData });
       if (!res.ok) throw new Error("Request failed");
+
+      // Save submission to database
+      if (user) {
+        const audioName = tab === "record" ? "recording.webm" : (uploadedFile?.name || "upload");
+        await supabase.from("submissions").insert({
+          user_id: user.id,
+          subject: subject.trim(),
+          emails: emails.join(","),
+          audio_filename: audioName,
+          status: "sent",
+        });
+      }
+
       setStatus("success");
     } catch {
       setStatus("error");
