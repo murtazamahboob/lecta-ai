@@ -9,6 +9,7 @@ interface Submission {
   subject: string;
   emails: string;
   audio_filename: string | null;
+  weak_points: string | null;
   status: string;
   created_at: string;
 }

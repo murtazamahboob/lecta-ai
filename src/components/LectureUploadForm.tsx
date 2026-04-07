@@ -142,6 +142,20 @@ export default function LectureUploadForm() {
           />
         </div>
 
+        {/* Weak Points */}
+        <div className="space-y-2">
+          <label htmlFor="weakPoints" className="block text-sm font-medium text-foreground">
+            Weak Points <span className="text-muted-foreground font-normal">(topics to focus on)</span>
+          </label>
+          <textarea
+            id="weakPoints"
+            value={weakPoints}
+            onChange={(e) => setWeakPoints(e.target.value)}
+            placeholder="e.g. I struggle with memory management and process scheduling…"
+            rows={3}
+            className="w-full rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring transition-all resize-none"
+          />
+
         {/* Emails */}
         <EmailTagsInput emails={emails} onChange={setEmails} />
 
