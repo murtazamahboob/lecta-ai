@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Shield, Trash2, Mail, FileAudio, Users, History,
-  TrendingUp, Clock, Target, Activity, Zap
+  TrendingUp, Clock, Target, Activity, Zap, UserPlus
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -66,6 +66,8 @@ export default function AdminPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"overview" | "users" | "submissions">("overview");
+  const [newUserId, setNewUserId] = useState("");
+  const [newRole, setNewRole] = useState<"admin" | "moderator" | "user">("moderator");
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -113,6 +115,24 @@ export default function AdminPage() {
       toast.error("Failed to remove role");
     } else {
       toast.success("Role removed");
+      fetchData();
+    }
+  };
+
+  const addRole = async () => {
+    const trimmed = newUserId.trim();
+    if (!trimmed) {
+      toast.error("Please enter a user ID");
+      return;
+    }
+    const { error } = await supabase
+      .from("user_roles")
+      .insert({ user_id: trimmed, role: newRole });
+    if (error) {
+      toast.error(error.message.includes("duplicate") ? "User already has this role" : "Failed to add role");
+    } else {
+      toast.success(`${newRole} role added`);
+      setNewUserId("");
       fetchData();
     }
   };
