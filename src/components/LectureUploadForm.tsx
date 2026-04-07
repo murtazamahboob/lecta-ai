@@ -155,6 +155,7 @@ export default function LectureUploadForm() {
             rows={3}
             className="w-full rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring transition-all resize-none"
           />
+        </div>
 
         {/* Emails */}
         <EmailTagsInput emails={emails} onChange={setEmails} />
