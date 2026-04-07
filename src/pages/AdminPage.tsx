@@ -290,7 +290,38 @@ export default function AdminPage() {
 
         {/* Users Tab */}
         {tab === "users" && (
-          <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+          <div className="space-y-4">
+            {/* Add Role Form */}
+            <div className="rounded-2xl border border-border bg-card shadow-card p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <UserPlus className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-sm font-semibold text-foreground">Add Role</h2>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="text"
+                  value={newUserId}
+                  onChange={(e) => setNewUserId(e.target.value)}
+                  placeholder="User ID (UUID)"
+                  className="flex-1 rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring transition-all font-mono"
+                />
+                <select
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value as any)}
+                  className="rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring transition-all"
+                >
+                  <option value="admin">Admin</option>
+                  <option value="moderator">Moderator</option>
+                  <option value="user">User</option>
+                </select>
+                <Button onClick={addRole} className="gradient-primary text-primary-foreground shadow-glow">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add
+                </Button>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
             {loading ? (
               <div className="p-8 text-center text-muted-foreground">Loading…</div>
             ) : roles.length === 0 ? (
