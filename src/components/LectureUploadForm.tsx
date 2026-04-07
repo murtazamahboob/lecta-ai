@@ -5,7 +5,7 @@ import EmailTagsInput from "./EmailTagsInput";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-const WEBHOOK_URL = "https://new9653.app.n8n.cloud/webhook-test/lecture-ghost";
+const WEBHOOK_URL = "https://new9653.app.n8n.cloud/webhook/lecture-ghost";
 const ACCEPTED = ".mp3,.wav,.webm";
 
 type Status = "idle" | "loading" | "success" | "error";
@@ -16,6 +16,7 @@ export default function LectureUploadForm() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [subject, setSubject] = useState("");
   const [emails, setEmails] = useState<string[]>([]);
+  const [weakPoints, setWeakPoints] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [tab, setTab] = useState<"record" | "upload">("record");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -39,6 +40,7 @@ export default function LectureUploadForm() {
       }
       formData.append("subject", subject.trim());
       formData.append("emails", emails.join(","));
+      formData.append("weak_points", weakPoints.trim());
 
       const res = await fetch(WEBHOOK_URL, { method: "POST", body: formData });
       if (!res.ok) throw new Error("Request failed");
@@ -51,6 +53,7 @@ export default function LectureUploadForm() {
           subject: subject.trim(),
           emails: emails.join(","),
           audio_filename: audioName,
+          weak_points: weakPoints.trim(),
           status: "sent",
         });
       }
