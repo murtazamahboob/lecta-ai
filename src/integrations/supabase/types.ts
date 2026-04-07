@@ -47,6 +47,7 @@ export type Database = {
           status: string
           subject: string
           user_id: string
+          weak_points: string | null
         }
         Insert: {
           audio_filename?: string | null
@@ -56,6 +57,7 @@ export type Database = {
           status?: string
           subject: string
           user_id: string
+          weak_points?: string | null
         }
         Update: {
           audio_filename?: string | null
@@ -65,6 +67,7 @@ export type Database = {
           status?: string
           subject?: string
           user_id?: string
+          weak_points?: string | null
         }
         Relationships: []
       }
