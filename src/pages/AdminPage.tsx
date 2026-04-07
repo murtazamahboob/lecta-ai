@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Shield, Trash2, Mail, FileAudio, Users, History,
-  TrendingUp, Clock, Target, Activity, Zap
+  TrendingUp, Clock, Target, Activity, Zap, UserPlus
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -66,6 +66,8 @@ export default function AdminPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"overview" | "users" | "submissions">("overview");
+  const [newUserId, setNewUserId] = useState("");
+  const [newRole, setNewRole] = useState<"admin" | "moderator" | "user">("moderator");
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -113,6 +115,24 @@ export default function AdminPage() {
       toast.error("Failed to remove role");
     } else {
       toast.success("Role removed");
+      fetchData();
+    }
+  };
+
+  const addRole = async () => {
+    const trimmed = newUserId.trim();
+    if (!trimmed) {
+      toast.error("Please enter a user ID");
+      return;
+    }
+    const { error } = await supabase
+      .from("user_roles")
+      .insert({ user_id: trimmed, role: newRole });
+    if (error) {
+      toast.error(error.message.includes("duplicate") ? "User already has this role" : "Failed to add role");
+    } else {
+      toast.success(`${newRole} role added`);
+      setNewUserId("");
       fetchData();
     }
   };
@@ -270,7 +290,38 @@ export default function AdminPage() {
 
         {/* Users Tab */}
         {tab === "users" && (
-          <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+          <div className="space-y-4">
+            {/* Add Role Form */}
+            <div className="rounded-2xl border border-border bg-card shadow-card p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <UserPlus className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-sm font-semibold text-foreground">Add Role</h2>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="text"
+                  value={newUserId}
+                  onChange={(e) => setNewUserId(e.target.value)}
+                  placeholder="User ID (UUID)"
+                  className="flex-1 rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring transition-all font-mono"
+                />
+                <select
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value as any)}
+                  className="rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring transition-all"
+                >
+                  <option value="admin">Admin</option>
+                  <option value="moderator">Moderator</option>
+                  <option value="user">User</option>
+                </select>
+                <Button onClick={addRole} className="gradient-primary text-primary-foreground shadow-glow">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add
+                </Button>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
             {loading ? (
               <div className="p-8 text-center text-muted-foreground">Loading…</div>
             ) : roles.length === 0 ? (
@@ -307,6 +358,7 @@ export default function AdminPage() {
                 </tbody>
               </table>
             )}
+            </div>
           </div>
         )}
 
