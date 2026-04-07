@@ -358,6 +358,7 @@ export default function AdminPage() {
                 </tbody>
               </table>
             )}
+            </div>
           </div>
         )}
 
