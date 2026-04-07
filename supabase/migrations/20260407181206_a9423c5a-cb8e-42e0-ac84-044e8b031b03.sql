@@ -1,0 +1,1 @@
+ALTER TABLE public.submissions ADD COLUMN weak_points text DEFAULT '';

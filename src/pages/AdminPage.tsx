@@ -3,7 +3,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Trash2, Mail, FileAudio, Users, History } from "lucide-react";
+import {
+  Shield, Trash2, Mail, FileAudio, Users, History,
+  TrendingUp, Clock, Target, Activity, Zap
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -21,8 +24,39 @@ interface Submission {
   subject: string;
   emails: string;
   audio_filename: string | null;
+  weak_points: string | null;
   status: string;
   created_at: string;
+}
+
+function StatCard({ icon: Icon, label, value, accent }: { icon: any; label: string; value: string | number; accent: string }) {
+  return (
+    <div className="relative group overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:border-primary/40 hover:shadow-glow">
+      {/* 3D glow effect */}
+      <div className={`absolute -top-10 -right-10 h-28 w-28 rounded-full ${accent} opacity-20 blur-2xl group-hover:opacity-40 transition-opacity duration-500`} />
+      <div className="relative z-10 flex items-center gap-4">
+        <div className={`h-12 w-12 rounded-xl ${accent} flex items-center justify-center shadow-lg`}>
+          <Icon className="h-6 w-6 text-primary-foreground" />
+        </div>
+        <div>
+          <p className="text-2xl font-bold text-foreground">{value}</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{label}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LiveIndicator() {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success-foreground">
+      <span className="relative flex h-2 w-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[hsl(var(--success))] opacity-75" />
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-[hsl(var(--success))]" />
+      </span>
+      Live
+    </span>
+  );
 }
 
 export default function AdminPage() {
@@ -31,11 +65,27 @@ export default function AdminPage() {
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"users" | "submissions">("users");
+  const [tab, setTab] = useState<"overview" | "users" | "submissions">("overview");
 
   useEffect(() => {
     if (!isAdmin) return;
     fetchData();
+
+    // Real-time subscription for submissions
+    const channel = supabase
+      .channel("admin-submissions")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "submissions" },
+        () => {
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [isAdmin]);
 
   const fetchData = async () => {
@@ -67,6 +117,26 @@ export default function AdminPage() {
     }
   };
 
+  // Stats
+  const totalSubmissions = submissions.length;
+  const uniqueUsers = new Set(submissions.map((s) => s.user_id)).size;
+  const todayCount = submissions.filter(
+    (s) => new Date(s.created_at).toDateString() === new Date().toDateString()
+  ).length;
+  const recentSubmissions = submissions.slice(0, 5);
+
+  // Aggregate weak points
+  const weakPointsMap: Record<string, number> = {};
+  submissions.forEach((s) => {
+    if (s.weak_points && s.weak_points.trim()) {
+      const key = s.weak_points.trim().toLowerCase();
+      weakPointsMap[key] = (weakPointsMap[key] || 0) + 1;
+    }
+  });
+  const topWeakPoints = Object.entries(weakPointsMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
   if (!isAdmin) {
     return (
       <main className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center bg-background">
@@ -82,42 +152,125 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-[calc(100vh-3.5rem)] bg-background px-4 py-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-            <Shield className="h-5 w-5 text-primary-foreground" />
+      <div className="max-w-6xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-2xl gradient-primary flex items-center justify-center shadow-glow">
+              <Shield className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground tracking-tight">Command Center</h1>
+              <p className="text-sm text-muted-foreground">Monitor & manage your platform</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Admin Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Manage users and view all submissions</p>
-          </div>
+          <LiveIndicator />
         </div>
 
         {/* Tabs */}
-        <div className="flex rounded-lg bg-muted p-1 gap-1">
-          <button
-            onClick={() => setTab("users")}
-            className={`flex-1 flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all ${
-              tab === "users" ? "gradient-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Users className="h-4 w-4" />
-            Users & Roles
-          </button>
-          <button
-            onClick={() => setTab("submissions")}
-            className={`flex-1 flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all ${
-              tab === "submissions" ? "gradient-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <History className="h-4 w-4" />
-            All Submissions ({submissions.length})
-          </button>
+        <div className="flex rounded-xl bg-muted/50 p-1 gap-1 backdrop-blur">
+          {[
+            { key: "overview", label: "Overview", icon: Activity },
+            { key: "users", label: "Users & Roles", icon: Users },
+            { key: "submissions", label: `All Submissions (${totalSubmissions})`, icon: History },
+          ].map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => setTab(key as any)}
+              className={`flex-1 flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                tab === key
+                  ? "gradient-primary text-primary-foreground shadow-lg shadow-primary/25"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              {label}
+            </button>
+          ))}
         </div>
+
+        {/* Overview Tab */}
+        {tab === "overview" && (
+          <div className="space-y-6">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard icon={FileAudio} label="Total Submissions" value={totalSubmissions} accent="gradient-primary" />
+              <StatCard icon={Users} label="Active Users" value={uniqueUsers} accent="bg-[hsl(var(--accent))]" />
+              <StatCard icon={Zap} label="Today" value={todayCount} accent="bg-[hsl(var(--success))]" />
+              <StatCard icon={TrendingUp} label="Admin Users" value={roles.filter(r => r.role === "admin").length} accent="bg-[hsl(var(--destructive))]" />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Recent Activity */}
+              <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+                <div className="p-4 border-b border-border flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <h2 className="text-sm font-semibold text-foreground">Recent Activity</h2>
+                </div>
+                {loading ? (
+                  <div className="p-6 text-center text-muted-foreground">Loading…</div>
+                ) : recentSubmissions.length === 0 ? (
+                  <div className="p-6 text-center text-muted-foreground text-sm">No activity yet</div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {recentSubmissions.map((s) => (
+                      <div key={s.id} className="p-4 flex items-center gap-3 hover:bg-muted/30 transition-colors">
+                        <div className="h-8 w-8 rounded-lg gradient-subtle flex items-center justify-center shrink-0">
+                          <FileAudio className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{s.subject}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(s.created_at), "MMM d · h:mm a")}
+                          </p>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-success/10 text-success-foreground border border-success/20 text-xs capitalize shrink-0">
+                          {s.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Top Weak Points */}
+              <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+                <div className="p-4 border-b border-border flex items-center gap-2">
+                  <Target className="h-4 w-4 text-muted-foreground" />
+                  <h2 className="text-sm font-semibold text-foreground">Top Weak Points</h2>
+                </div>
+                {topWeakPoints.length === 0 ? (
+                  <div className="p-6 text-center text-muted-foreground text-sm">No weak points reported yet</div>
+                ) : (
+                  <div className="p-4 space-y-3">
+                    {topWeakPoints.map(([point, count], i) => {
+                      const maxCount = topWeakPoints[0][1];
+                      const pct = (count / maxCount) * 100;
+                      return (
+                        <div key={i} className="space-y-1.5">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-foreground capitalize truncate max-w-[70%]">{point}</span>
+                            <span className="text-xs text-muted-foreground">{count} mention{count > 1 ? "s" : ""}</span>
+                          </div>
+                          <div className="h-2 rounded-full bg-muted overflow-hidden">
+                            <div
+                              className="h-full rounded-full gradient-primary transition-all duration-700"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Users Tab */}
         {tab === "users" && (
-          <div className="rounded-xl border border-border bg-card shadow-card overflow-hidden">
+          <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
             {loading ? (
               <div className="p-8 text-center text-muted-foreground">Loading…</div>
             ) : roles.length === 0 ? (
@@ -125,7 +278,7 @@ export default function AdminPage() {
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border text-muted-foreground">
+                  <tr className="border-b border-border text-muted-foreground bg-muted/30">
                     <th className="text-left p-4 font-medium">User ID</th>
                     <th className="text-left p-4 font-medium">Role</th>
                     <th className="text-right p-4 font-medium">Actions</th>
@@ -133,7 +286,7 @@ export default function AdminPage() {
                 </thead>
                 <tbody>
                   {roles.map((r) => (
-                    <tr key={r.id} className="border-b border-border last:border-0">
+                    <tr key={r.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
                       <td className="p-4 text-foreground font-mono text-xs truncate max-w-[200px]">{r.user_id}</td>
                       <td className="p-4">
                         <Badge variant={r.role === "admin" ? "default" : "secondary"}>{r.role}</Badge>
@@ -159,7 +312,7 @@ export default function AdminPage() {
 
         {/* Submissions Tab */}
         {tab === "submissions" && (
-          <div className="rounded-xl border border-border bg-card shadow-card overflow-hidden">
+          <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
             {loading ? (
               <div className="p-8 text-center text-muted-foreground">Loading…</div>
             ) : submissions.length === 0 ? (
@@ -171,9 +324,10 @@ export default function AdminPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-border text-muted-foreground">
+                    <tr className="border-b border-border text-muted-foreground bg-muted/30">
                       <th className="text-left p-4 font-medium">Subject</th>
                       <th className="text-left p-4 font-medium">Recipients</th>
+                      <th className="text-left p-4 font-medium">Weak Points</th>
                       <th className="text-left p-4 font-medium">User</th>
                       <th className="text-left p-4 font-medium">Status</th>
                       <th className="text-left p-4 font-medium">Date</th>
@@ -181,15 +335,22 @@ export default function AdminPage() {
                   </thead>
                   <tbody>
                     {submissions.map((s) => (
-                      <tr key={s.id} className="border-b border-border last:border-0">
-                        <td className="p-4 text-foreground font-medium truncate max-w-[180px]">{s.subject}</td>
+                      <tr key={s.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
+                        <td className="p-4 text-foreground font-medium truncate max-w-[160px]">{s.subject}</td>
                         <td className="p-4">
                           <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
                             <Mail className="h-3 w-3 shrink-0" />
-                            <span className="truncate max-w-[150px]">{s.emails}</span>
+                            <span className="truncate max-w-[130px]">{s.emails}</span>
                           </div>
                         </td>
-                        <td className="p-4 font-mono text-xs text-muted-foreground truncate max-w-[120px]">{s.user_id.slice(0, 8)}…</td>
+                        <td className="p-4">
+                          {s.weak_points ? (
+                            <span className="text-xs text-accent truncate max-w-[150px] block">{s.weak_points}</span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        <td className="p-4 font-mono text-xs text-muted-foreground truncate max-w-[100px]">{s.user_id.slice(0, 8)}…</td>
                         <td className="p-4">
                           <span className="px-2 py-0.5 rounded-full bg-success/10 text-success-foreground border border-success/20 text-xs capitalize">
                             {s.status}
