@@ -15,21 +15,39 @@ interface Submission {
 }
 
 export default function HistoryPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    let isMounted = true;
+
+    if (authLoading) return;
+    if (!user) {
+      setSubmissions([]);
+      setLoading(false);
+      return;
+    }
+
     supabase
       .from("submissions")
       .select("*")
       .order("created_at", { ascending: false })
       .then(({ data }) => {
+        if (!isMounted) return;
         setSubmissions((data as Submission[]) || []);
         setLoading(false);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setSubmissions([]);
+        setLoading(false);
       });
-  }, [user]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user, authLoading]);
 
   return (
     <main className="min-h-[calc(100vh-3.5rem)] bg-background px-4 py-8">

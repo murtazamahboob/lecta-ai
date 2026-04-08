@@ -7,27 +7,43 @@ import { User, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    let isMounted = true;
+
+    if (authLoading) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     supabase
       .from("profiles")
       .select("display_name, avatar_url")
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => {
+        if (!isMounted) return;
         if (data) {
           setDisplayName(data.display_name || "");
           setAvatarUrl(data.avatar_url || "");
         }
         setLoading(false);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setLoading(false);
       });
-  }, [user]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user, authLoading]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -51,7 +67,7 @@ export default function ProfilePage() {
     .toUpperCase()
     .slice(0, 2);
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <main className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
