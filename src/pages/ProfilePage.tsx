@@ -22,23 +22,25 @@ export default function ProfilePage() {
       return;
     }
 
-    supabase
-      .from("profiles")
-      .select("display_name, avatar_url")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
+    void (async () => {
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("display_name, avatar_url")
+          .eq("id", user.id)
+          .maybeSingle();
+
         if (!isMounted) return;
         if (data) {
           setDisplayName(data.display_name || "");
           setAvatarUrl(data.avatar_url || "");
         }
         setLoading(false);
-      })
-      .catch(() => {
+      } catch {
         if (!isMounted) return;
         setLoading(false);
-      });
+      }
+    })();
 
     return () => {
       isMounted = false;

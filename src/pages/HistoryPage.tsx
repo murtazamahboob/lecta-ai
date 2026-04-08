@@ -29,20 +29,22 @@ export default function HistoryPage() {
       return;
     }
 
-    supabase
-      .from("submissions")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
+    void (async () => {
+      try {
+        const { data } = await supabase
+          .from("submissions")
+          .select("*")
+          .order("created_at", { ascending: false });
+
         if (!isMounted) return;
         setSubmissions((data as Submission[]) || []);
         setLoading(false);
-      })
-      .catch(() => {
+      } catch {
         if (!isMounted) return;
         setSubmissions([]);
         setLoading(false);
-      });
+      }
+    })();
 
     return () => {
       isMounted = false;

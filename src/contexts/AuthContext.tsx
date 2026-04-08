@@ -40,15 +40,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       applySession(nextSession);
     });
 
-    supabase.auth
-      .getSession()
-      .then(({ data: { session } }) => {
+    void (async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         applySession(session);
-      })
-      .catch(() => {
+      } catch {
         if (!isMounted) return;
         setLoading(false);
-      });
+      }
+    })();
 
     return () => {
       isMounted = false;
@@ -67,18 +69,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setRoleLoading(true);
 
-    supabase
-      .rpc("has_role", { _user_id: user.id, _role: "admin" })
-      .then(({ data, error }) => {
+    void (async () => {
+      try {
+        const { data, error } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
         if (!isMounted) return;
         setIsAdmin(!error && Boolean(data));
         setRoleLoading(false);
-      })
-      .catch(() => {
+      } catch {
         if (!isMounted) return;
         setIsAdmin(false);
         setRoleLoading(false);
-      });
+      }
+    })();
 
     return () => {
       isMounted = false;
