@@ -73,21 +73,9 @@ export default function AdminPage() {
     if (!isAdmin) return;
     fetchData();
 
-    // Real-time subscription for submissions
-    const channel = supabase
-      .channel("admin-submissions")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "submissions" },
-        () => {
-          fetchData();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // Poll for updates every 10 seconds (secure alternative to realtime)
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
   }, [isAdmin]);
 
   const fetchData = async () => {
