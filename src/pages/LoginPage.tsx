@@ -3,9 +3,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { LogIn, Mail, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { Navigate } from "react-router-dom";
 
 export default function LoginPage() {
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
+  const { user, loading: authLoading, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,6 +28,18 @@ export default function LoginPage() {
     }
     setLoading(false);
   };
+
+  if (authLoading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </main>
+    );
+  }
+
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4 bg-background">

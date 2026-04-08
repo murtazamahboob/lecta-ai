@@ -60,34 +60,54 @@ function LiveIndicator() {
 }
 
 export default function AdminPage() {
-  const { isAdmin, user } = useAuth();
+  const { isAdmin, user, loading: authLoading, roleLoading } = useAuth();
   const navigate = useNavigate();
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [tab, setTab] = useState<"overview" | "users" | "submissions">("overview");
   const [newUserId, setNewUserId] = useState("");
   const [newRole, setNewRole] = useState<"admin" | "moderator" | "user">("moderator");
 
-  useEffect(() => {
-    if (!isAdmin) return;
-    fetchData();
+  const fetchData = async (showLoader = true) => {
+    if (showLoader) {
+      setDataLoading(true);
+    }
 
-    // Poll for updates every 10 seconds (secure alternative to realtime)
-    const interval = setInterval(fetchData, 10000);
-    return () => clearInterval(interval);
-  }, [isAdmin]);
-
-  const fetchData = async () => {
-    setLoading(true);
     const [rolesRes, subsRes] = await Promise.all([
       supabase.from("user_roles").select("*"),
       supabase.from("submissions").select("*").order("created_at", { ascending: false }),
     ]);
+
+    if (rolesRes.error || subsRes.error) {
+      if (showLoader) {
+        toast.error("Failed to load admin data");
+      }
+      setRoles([]);
+      setSubmissions([]);
+      setDataLoading(false);
+      return;
+    }
+
     setRoles((rolesRes.data as UserRole[]) || []);
     setSubmissions((subsRes.data as Submission[]) || []);
-    setLoading(false);
+    setDataLoading(false);
   };
+
+  useEffect(() => {
+    if (authLoading || roleLoading) return;
+    if (!isAdmin) {
+      setDataLoading(false);
+      return;
+    }
+
+    void fetchData();
+    const interval = setInterval(() => {
+      void fetchData(false);
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [authLoading, roleLoading, isAdmin]);
 
   const removeRole = async (userId: string, role: string) => {
     if (userId === user?.id) {
@@ -103,7 +123,7 @@ export default function AdminPage() {
       toast.error("Failed to remove role");
     } else {
       toast.success("Role removed");
-      fetchData();
+      void fetchData(false);
     }
   };
 
@@ -121,7 +141,7 @@ export default function AdminPage() {
     } else {
       toast.success(`${newRole} role added`);
       setNewUserId("");
-      fetchData();
+      void fetchData(false);
     }
   };
 
@@ -144,6 +164,14 @@ export default function AdminPage() {
   const topWeakPoints = Object.entries(weakPointsMap)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
+
+  if (authLoading || roleLoading) {
+    return (
+      <main className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
+      </main>
+    );
+  }
 
   if (!isAdmin) {
     return (
@@ -215,7 +243,7 @@ export default function AdminPage() {
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <h2 className="text-sm font-semibold text-foreground">Recent Activity</h2>
                 </div>
-                {loading ? (
+                {dataLoading ? (
                   <div className="p-6 text-center text-muted-foreground">Loading…</div>
                 ) : recentSubmissions.length === 0 ? (
                   <div className="p-6 text-center text-muted-foreground text-sm">No activity yet</div>
@@ -310,7 +338,7 @@ export default function AdminPage() {
             </div>
 
             <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
-            {loading ? (
+            {dataLoading ? (
               <div className="p-8 text-center text-muted-foreground">Loading…</div>
             ) : roles.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">No user roles found.</div>
@@ -353,7 +381,7 @@ export default function AdminPage() {
         {/* Submissions Tab */}
         {tab === "submissions" && (
           <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
-            {loading ? (
+            {dataLoading ? (
               <div className="p-8 text-center text-muted-foreground">Loading…</div>
             ) : submissions.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">

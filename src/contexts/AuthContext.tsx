@@ -7,6 +7,7 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  roleLoading: boolean;
   isAdmin: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
@@ -20,43 +21,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [roleLoading, setRoleLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const checkAdmin = async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "admin")
-      .maybeSingle();
-    setIsAdmin(!!data);
-  };
-
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await checkAdmin(session.user.id);
-        } else {
-          setIsAdmin(false);
-        }
-        setLoading(false);
-      }
-    );
+    let isMounted = true;
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await checkAdmin(session.user.id);
-      }
+    const applySession = (nextSession: Session | null) => {
+      if (!isMounted) return;
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
       setLoading(false);
+    };
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      applySession(nextSession);
     });
 
-    return () => subscription.unsubscribe();
+    void (async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        applySession(session);
+      } catch {
+        if (!isMounted) return;
+        setLoading(false);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!user) {
+      setIsAdmin(false);
+      setRoleLoading(false);
+      return;
+    }
+
+    setRoleLoading(true);
+
+    void (async () => {
+      try {
+        const { data, error } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
+        if (!isMounted) return;
+        setIsAdmin(!error && Boolean(data));
+        setRoleLoading(false);
+      } catch {
+        if (!isMounted) return;
+        setIsAdmin(false);
+        setRoleLoading(false);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id]);
 
   const signInWithGoogle = async () => {
     await lovable.auth.signInWithOAuth("google", {
@@ -80,11 +109,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setSession(null);
+    setUser(null);
     setIsAdmin(false);
+    setRoleLoading(false);
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, isAdmin, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut }}>
+    <AuthContext.Provider value={{ session, user, loading, roleLoading, isAdmin, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut }}>
       {children}
     </AuthContext.Provider>
   );
