@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Upload, Send, Loader2, CheckCircle2, AlertCircle, Mic, FileAudio } from "lucide-react";
+import { Upload, Send, Loader2, CheckCircle2, AlertCircle, Mic, FileAudio, Sparkles } from "lucide-react";
 import AudioRecorderCard from "./AudioRecorderCard";
 import EmailTagsInput from "./EmailTagsInput";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,7 @@ export default function LectureUploadForm() {
   const [weakPoints, setWeakPoints] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [tab, setTab] = useState<"record" | "upload">("record");
+  const [sendAnimation, setSendAnimation] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const audioReady = tab === "record" ? !!audioBlob : !!uploadedFile;
@@ -30,6 +31,7 @@ export default function LectureUploadForm() {
   };
 
   const handleSubmit = async () => {
+    setSendAnimation(true);
     setStatus("loading");
     try {
       const formData = new FormData();
@@ -45,7 +47,6 @@ export default function LectureUploadForm() {
       const res = await fetch(WEBHOOK_URL, { method: "POST", body: formData });
       if (!res.ok) throw new Error("Request failed");
 
-      // Save submission to database
       if (user) {
         const audioName = tab === "record" ? "recording.webm" : (uploadedFile?.name || "upload");
         await supabase.from("submissions").insert({
@@ -61,29 +62,31 @@ export default function LectureUploadForm() {
       setStatus("success");
     } catch {
       setStatus("error");
+    } finally {
+      setTimeout(() => setSendAnimation(false), 600);
     }
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto">
+    <div className="w-full max-w-lg mx-auto animate-float-up">
       {/* Header */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl gradient-primary shadow-glow mb-4">
-          <Mic className="h-7 w-7 text-primary-foreground" />
+        <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl gradient-primary shadow-glow mb-4 transition-transform duration-300 hover:scale-110 hover:rotate-3">
+          <Sparkles className="h-7 w-7 text-primary-foreground" />
         </div>
-        <h1 className="text-2xl font-bold text-foreground tracking-tight">Lecture Ghost</h1>
-        <p className="text-sm text-muted-foreground mt-1">Record or upload lectures and share with your class</p>
+        <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Lecta.ai</h1>
+        <p className="text-sm text-muted-foreground mt-1">Audio to smart notes, instantly</p>
       </div>
 
       {/* Card */}
-      <div className="rounded-2xl border border-border bg-card shadow-card p-6 space-y-6">
+      <div className="rounded-2xl border border-border bg-card shadow-card p-6 space-y-6 transition-all duration-300 hover:shadow-glow">
         {/* Audio source tabs */}
         <div className="flex rounded-lg bg-muted p-1 gap-1">
           <button
             type="button"
             onClick={() => setTab("record")}
-            className={`flex-1 flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all ${
-              tab === "record" ? "gradient-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            className={`flex-1 flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all duration-300 ${
+              tab === "record" ? "gradient-primary text-primary-foreground shadow-sm scale-[1.02]" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             }`}
           >
             <Mic className="h-4 w-4" />
@@ -92,8 +95,8 @@ export default function LectureUploadForm() {
           <button
             type="button"
             onClick={() => setTab("upload")}
-            className={`flex-1 flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all ${
-              tab === "upload" ? "gradient-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            className={`flex-1 flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all duration-300 ${
+              tab === "upload" ? "gradient-primary text-primary-foreground shadow-sm scale-[1.02]" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             }`}
           >
             <Upload className="h-4 w-4" />
@@ -102,16 +105,20 @@ export default function LectureUploadForm() {
         </div>
 
         {/* Record tab */}
-        {tab === "record" && <AudioRecorderCard onAudioReady={setAudioBlob} />}
+        {tab === "record" && (
+          <div className="animate-float-up">
+            <AudioRecorderCard onAudioReady={setAudioBlob} />
+          </div>
+        )}
 
         {/* Upload tab */}
         {tab === "upload" && (
-          <div className="space-y-3">
+          <div className="space-y-3 animate-float-up">
             <label className="block text-sm font-medium text-foreground">Upload Audio File</label>
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="w-full flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border p-8 text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"
+              className="w-full flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border p-8 text-muted-foreground hover:border-primary/50 hover:text-foreground transition-all duration-300 hover:shadow-glow/20 hover:scale-[1.01] active:scale-[0.99]"
             >
               <FileAudio className="h-8 w-8" />
               <span className="text-sm">{uploadedFile ? uploadedFile.name : "Click to select audio file"}</span>
@@ -128,7 +135,7 @@ export default function LectureUploadForm() {
         )}
 
         {/* Subject */}
-        <div className="space-y-2">
+        <div className="space-y-2 form-field-focus">
           <label htmlFor="subject" className="block text-sm font-medium text-foreground">
             Subject Name
           </label>
@@ -138,12 +145,12 @@ export default function LectureUploadForm() {
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             placeholder="e.g. Operating Systems — Lecture 5"
-            className="w-full rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring transition-all"
+            className="w-full rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring focus:border-primary transition-all duration-300"
           />
         </div>
 
         {/* Weak Points */}
-        <div className="space-y-2">
+        <div className="space-y-2 form-field-focus">
           <label htmlFor="weakPoints" className="block text-sm font-medium text-foreground">
             Weak Points <span className="text-muted-foreground font-normal">(topics to focus on)</span>
           </label>
@@ -153,7 +160,7 @@ export default function LectureUploadForm() {
             onChange={(e) => setWeakPoints(e.target.value)}
             placeholder="e.g. I struggle with memory management and process scheduling…"
             rows={3}
-            className="w-full rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring transition-all resize-none"
+            className="w-full rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring focus:border-primary transition-all duration-300 resize-none"
           />
         </div>
 
@@ -165,11 +172,13 @@ export default function LectureUploadForm() {
           type="button"
           disabled={!canSubmit}
           onClick={handleSubmit}
-          className="w-full flex items-center justify-center gap-2 rounded-lg gradient-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none transition-all"
+          className={`w-full flex items-center justify-center gap-2 rounded-lg gradient-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-300 active:scale-[0.97] ${
+            canSubmit && status === "idle" ? "animate-btn-pulse" : ""
+          } ${sendAnimation ? "scale-95" : ""}`}
         >
           {status === "loading" ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin-slow" />
+              <Loader2 className="h-4 w-4 animate-spin" />
               Sending…
             </>
           ) : (
@@ -182,13 +191,13 @@ export default function LectureUploadForm() {
 
         {/* Status messages */}
         {status === "success" && (
-          <div className="flex items-center gap-2 rounded-lg bg-success/10 border border-success/20 px-4 py-3 text-sm text-success-foreground">
+          <div className="flex items-center gap-2 rounded-lg bg-success/10 border border-success/20 px-4 py-3 text-sm text-success-foreground animate-success-pop">
             <CheckCircle2 className="h-4 w-4 shrink-0" />
             Lecture sent successfully!
           </div>
         )}
         {status === "error" && (
-          <div className="flex items-center gap-2 rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
+          <div className="flex items-center gap-2 rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive animate-shake">
             <AlertCircle className="h-4 w-4 shrink-0" />
             Something went wrong. Please try again.
           </div>

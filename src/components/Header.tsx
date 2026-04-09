@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Mic, History, User, Shield, LogOut } from "lucide-react";
+import { Sparkles, History, User, Shield, LogOut } from "lucide-react";
 
 export default function Header() {
   const { user, isAdmin, signOut } = useAuth();
@@ -33,7 +33,7 @@ export default function Header() {
     user?.user_metadata?.avatar_url || user?.user_metadata?.picture || "";
 
   const navLinks = [
-    { to: "/", label: "Home", icon: Mic },
+    { to: "/", label: "Home", icon: Sparkles },
     { to: "/history", label: "History", icon: History },
     ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: Shield }] : []),
   ];
@@ -42,12 +42,12 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card/80 backdrop-blur-md">
       <div className="max-w-5xl mx-auto flex items-center justify-between h-14 px-4">
         <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg gradient-primary flex items-center justify-center shadow-glow">
-              <Mic className="h-4 w-4 text-primary-foreground" />
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="h-8 w-8 rounded-lg gradient-primary flex items-center justify-center shadow-glow transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+              <Sparkles className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-bold text-foreground hidden sm:inline">
-              Lecture Ghost
+            <span className="font-extrabold text-foreground hidden sm:inline tracking-tight">
+              Lecta.ai
             </span>
           </Link>
 
@@ -58,9 +58,9 @@ export default function Header() {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? "gradient-primary text-primary-foreground"
+                      ? "gradient-primary text-primary-foreground shadow-glow"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
                 >

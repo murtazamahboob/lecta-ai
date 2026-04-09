@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { LogIn, Mail, Loader2 } from "lucide-react";
+import { LogIn, Mail, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Navigate } from "react-router-dom";
 
@@ -32,7 +32,7 @@ export default function LoginPage() {
   if (authLoading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </main>
     );
   }
@@ -43,9 +43,12 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4 bg-background">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-card text-center space-y-6">
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-card text-center space-y-6 animate-float-up">
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-foreground">Lecture Ghost</h1>
+          <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl gradient-primary shadow-glow mb-2">
+            <Sparkles className="h-6 w-6 text-primary-foreground" />
+          </div>
+          <h1 className="text-2xl font-extrabold text-foreground">Lecta.ai</h1>
           <p className="text-sm text-muted-foreground">
             {mode === "signin" ? "Sign in to continue" : "Create your account"}
           </p>
@@ -53,7 +56,7 @@ export default function LoginPage() {
 
         <Button
           onClick={signInWithGoogle}
-          className="w-full gradient-primary text-primary-foreground font-semibold gap-2"
+          className="w-full gradient-primary text-primary-foreground font-semibold gap-2 shadow-glow hover:opacity-90 transition-all duration-300 active:scale-[0.97]"
           size="lg"
         >
           <LogIn className="w-4 h-4" />
@@ -67,7 +70,7 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleEmailAuth} className="space-y-3 text-left">
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 form-field-focus">
             <label className="text-sm font-medium text-foreground">Email</label>
             <input
               type="email"
@@ -75,10 +78,10 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              className="w-full rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring transition-all"
+              className="w-full rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring transition-all duration-300"
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 form-field-focus">
             <label className="text-sm font-medium text-foreground">Password</label>
             <input
               type="password"
@@ -87,10 +90,10 @@ export default function LoginPage() {
               placeholder="••••••••"
               required
               minLength={6}
-              className="w-full rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring transition-all"
+              className="w-full rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring transition-all duration-300"
             />
           </div>
-          <Button type="submit" disabled={loading} variant="secondary" className="w-full gap-2">
+          <Button type="submit" disabled={loading} variant="secondary" className="w-full gap-2 transition-all duration-300 active:scale-[0.97]">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
             {mode === "signin" ? "Sign in with Email" : "Sign up with Email"}
           </Button>
