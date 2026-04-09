@@ -357,6 +357,7 @@ export default function AdminPage() {
                     <thead>
                       <tr className="border-b border-border text-muted-foreground bg-muted/30">
                         <th className="text-left p-4 font-medium">User ID</th>
+                        <th className="text-left p-4 font-medium">Email</th>
                         <th className="text-left p-4 font-medium">Display Name</th>
                         <th className="text-left p-4 font-medium">Joined</th>
                       </tr>
@@ -365,6 +366,10 @@ export default function AdminPage() {
                       {profiles.map((p) => (
                         <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
                           <td className="p-4 font-mono text-xs text-muted-foreground">{p.id.slice(0, 12)}…</td>
+                          <td className="p-4 text-foreground flex items-center gap-1.5">
+                            <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            {userEmails[p.id] || "—"}
+                          </td>
                           <td className="p-4 text-foreground">{p.display_name || "—"}</td>
                           <td className="p-4 text-xs text-muted-foreground">{format(new Date(p.created_at), "MMM d, yyyy")}</td>
                         </tr>
