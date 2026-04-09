@@ -71,6 +71,7 @@ export default function AdminPage() {
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [userEmails, setUserEmails] = useState<Record<string, string>>({});
   const [dataLoading, setDataLoading] = useState(true);
   const [tab, setTab] = useState<"overview" | "users" | "submissions">("overview");
   const [newUserId, setNewUserId] = useState("");
@@ -79,10 +80,11 @@ export default function AdminPage() {
   const fetchData = async (showLoader = true) => {
     if (showLoader) setDataLoading(true);
 
-    const [rolesRes, subsRes, profilesRes] = await Promise.all([
+    const [rolesRes, subsRes, profilesRes, emailsRes] = await Promise.all([
       supabase.from("user_roles").select("*"),
       supabase.from("submissions").select("*").order("created_at", { ascending: false }),
       supabase.from("profiles").select("*"),
+      supabase.rpc("get_user_emails"),
     ]);
 
     if (rolesRes.error || subsRes.error) {
@@ -93,9 +95,18 @@ export default function AdminPage() {
       return;
     }
 
+    // Build email lookup map
+    const emailMap: Record<string, string> = {};
+    if (emailsRes.data) {
+      (emailsRes.data as { user_id: string; email: string }[]).forEach((e) => {
+        emailMap[e.user_id] = e.email;
+      });
+    }
+
     setRoles((rolesRes.data as UserRole[]) || []);
     setSubmissions((subsRes.data as Submission[]) || []);
     setProfiles((profilesRes.data as Profile[]) || []);
+    setUserEmails(emailMap);
     setDataLoading(false);
   };
 
