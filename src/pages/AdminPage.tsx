@@ -425,6 +425,7 @@ export default function AdminPage() {
                   <thead>
                     <tr className="border-b border-border text-muted-foreground bg-muted/30">
                       <th className="text-left p-4 font-medium">User ID</th>
+                      <th className="text-left p-4 font-medium">Email</th>
                       <th className="text-left p-4 font-medium">Name</th>
                       <th className="text-left p-4 font-medium">Role</th>
                       <th className="text-right p-4 font-medium">Actions</th>
@@ -434,6 +435,7 @@ export default function AdminPage() {
                     {roles.map((r) => (
                       <tr key={r.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
                         <td className="p-4 text-foreground font-mono text-xs truncate max-w-[200px]">{r.user_id.slice(0, 12)}…</td>
+                        <td className="p-4 text-foreground text-sm">{userEmails[r.user_id] || "—"}</td>
                         <td className="p-4 text-foreground text-sm">{getProfileName(r.user_id)}</td>
                         <td className="p-4">
                           <Badge variant={r.role === "admin" ? "default" : "secondary"}>{r.role}</Badge>
