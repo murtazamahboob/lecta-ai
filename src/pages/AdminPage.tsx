@@ -71,6 +71,7 @@ export default function AdminPage() {
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [userEmails, setUserEmails] = useState<Record<string, string>>({});
   const [dataLoading, setDataLoading] = useState(true);
   const [tab, setTab] = useState<"overview" | "users" | "submissions">("overview");
   const [newUserId, setNewUserId] = useState("");
@@ -79,10 +80,11 @@ export default function AdminPage() {
   const fetchData = async (showLoader = true) => {
     if (showLoader) setDataLoading(true);
 
-    const [rolesRes, subsRes, profilesRes] = await Promise.all([
+    const [rolesRes, subsRes, profilesRes, emailsRes] = await Promise.all([
       supabase.from("user_roles").select("*"),
       supabase.from("submissions").select("*").order("created_at", { ascending: false }),
       supabase.from("profiles").select("*"),
+      supabase.rpc("get_user_emails"),
     ]);
 
     if (rolesRes.error || subsRes.error) {
@@ -93,9 +95,18 @@ export default function AdminPage() {
       return;
     }
 
+    // Build email lookup map
+    const emailMap: Record<string, string> = {};
+    if (emailsRes.data) {
+      (emailsRes.data as { user_id: string; email: string }[]).forEach((e) => {
+        emailMap[e.user_id] = e.email;
+      });
+    }
+
     setRoles((rolesRes.data as UserRole[]) || []);
     setSubmissions((subsRes.data as Submission[]) || []);
     setProfiles((profilesRes.data as Profile[]) || []);
+    setUserEmails(emailMap);
     setDataLoading(false);
   };
 
@@ -346,6 +357,7 @@ export default function AdminPage() {
                     <thead>
                       <tr className="border-b border-border text-muted-foreground bg-muted/30">
                         <th className="text-left p-4 font-medium">User ID</th>
+                        <th className="text-left p-4 font-medium">Email</th>
                         <th className="text-left p-4 font-medium">Display Name</th>
                         <th className="text-left p-4 font-medium">Joined</th>
                       </tr>
@@ -354,6 +366,10 @@ export default function AdminPage() {
                       {profiles.map((p) => (
                         <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
                           <td className="p-4 font-mono text-xs text-muted-foreground">{p.id.slice(0, 12)}…</td>
+                          <td className="p-4 text-foreground flex items-center gap-1.5">
+                            <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            {userEmails[p.id] || "—"}
+                          </td>
                           <td className="p-4 text-foreground">{p.display_name || "—"}</td>
                           <td className="p-4 text-xs text-muted-foreground">{format(new Date(p.created_at), "MMM d, yyyy")}</td>
                         </tr>
@@ -409,6 +425,7 @@ export default function AdminPage() {
                   <thead>
                     <tr className="border-b border-border text-muted-foreground bg-muted/30">
                       <th className="text-left p-4 font-medium">User ID</th>
+                      <th className="text-left p-4 font-medium">Email</th>
                       <th className="text-left p-4 font-medium">Name</th>
                       <th className="text-left p-4 font-medium">Role</th>
                       <th className="text-right p-4 font-medium">Actions</th>
@@ -418,6 +435,7 @@ export default function AdminPage() {
                     {roles.map((r) => (
                       <tr key={r.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
                         <td className="p-4 text-foreground font-mono text-xs truncate max-w-[200px]">{r.user_id.slice(0, 12)}…</td>
+                        <td className="p-4 text-foreground text-sm">{userEmails[r.user_id] || "—"}</td>
                         <td className="p-4 text-foreground text-sm">{getProfileName(r.user_id)}</td>
                         <td className="p-4">
                           <Badge variant={r.role === "admin" ? "default" : "secondary"}>{r.role}</Badge>
