@@ -1,17 +1,18 @@
 import { useState, useRef } from "react";
-import { Upload, Send, Loader2, CheckCircle2, AlertCircle, Mic, FileAudio, Sparkles } from "lucide-react";
+import { Upload, Send, Loader2, CheckCircle2, AlertCircle, Mic, FileAudio, Sparkles, FlaskConical, Rocket } from "lucide-react";
 import AudioRecorderCard from "./AudioRecorderCard";
 import EmailTagsInput from "./EmailTagsInput";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-const WEBHOOK_URL = "https://new9653.app.n8n.cloud/webhook/lecture-ghost";
+const WEBHOOK_PROD = "https://lecta.app.n8n.cloud/webhook/lecture-ghost";
+const WEBHOOK_TEST = "https://lecta.app.n8n.cloud/webhook-test/lecture-ghost";
 const ACCEPTED = ".mp3,.wav,.webm";
 
 type Status = "idle" | "loading" | "success" | "error";
 
 export default function LectureUploadForm() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [subject, setSubject] = useState("");
@@ -20,6 +21,7 @@ export default function LectureUploadForm() {
   const [status, setStatus] = useState<Status>("idle");
   const [tab, setTab] = useState<"record" | "upload">("record");
   const [sendAnimation, setSendAnimation] = useState(false);
+  const [mode, setMode] = useState<"prod" | "test">("prod");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const audioReady = tab === "record" ? !!audioBlob : !!uploadedFile;
@@ -44,7 +46,8 @@ export default function LectureUploadForm() {
       formData.append("emails", emails.join(","));
       formData.append("weak_points", weakPoints.trim());
 
-      const res = await fetch(WEBHOOK_URL, { method: "POST", body: formData });
+      const webhookUrl = isAdmin && mode === "test" ? WEBHOOK_TEST : WEBHOOK_PROD;
+      const res = await fetch(webhookUrl, { method: "POST", body: formData });
       if (!res.ok) throw new Error("Request failed");
 
       if (user) {
@@ -55,7 +58,7 @@ export default function LectureUploadForm() {
           emails: emails.join(","),
           audio_filename: audioName,
           weak_points: weakPoints.trim(),
-          status: "sent",
+          status: isAdmin && mode === "test" ? "test" : "sent",
         });
       }
 
@@ -80,6 +83,40 @@ export default function LectureUploadForm() {
 
       {/* Card */}
       <div className="rounded-2xl border border-border bg-card shadow-card p-6 space-y-6 transition-all duration-300 hover:shadow-glow">
+        {/* Admin-only mode toggle */}
+        {isAdmin && (
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-primary">Admin · Webhook Mode</span>
+              <span className={`text-xs font-bold ${mode === "test" ? "text-yellow-500" : "text-green-500"}`}>
+                {mode === "test" ? "TEST" : "PRODUCTION"}
+              </span>
+            </div>
+            <div className="flex rounded-lg bg-muted p-1 gap-1">
+              <button
+                type="button"
+                onClick={() => setMode("prod")}
+                className={`flex-1 flex items-center justify-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-300 ${
+                  mode === "prod" ? "gradient-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Rocket className="h-3.5 w-3.5" />
+                Production
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("test")}
+                className={`flex-1 flex items-center justify-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-300 ${
+                  mode === "test" ? "bg-yellow-500/20 text-yellow-500 shadow-sm" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <FlaskConical className="h-3.5 w-3.5" />
+                Test
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Audio source tabs */}
         <div className="flex rounded-lg bg-muted p-1 gap-1">
           <button
