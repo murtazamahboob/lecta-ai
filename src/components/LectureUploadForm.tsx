@@ -26,6 +26,7 @@ export default function LectureUploadForm() {
   const [showOverlay, setShowOverlay] = useState(false);
   const [requestDone, setRequestDone] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const requestDoneRef = useRef(false);
 
   const audioReady = tab === "record" ? !!audioBlob : !!uploadedFile;
   const canSubmit = audioReady && emails.length > 0 && subject.trim().length > 0 && status !== "loading";
@@ -39,6 +40,7 @@ export default function LectureUploadForm() {
     setSendAnimation(true);
     setStatus("loading");
     setRequestDone(false);
+    requestDoneRef.current = false;
     setShowOverlay(true);
     try {
       const formData = new FormData();
@@ -73,6 +75,7 @@ export default function LectureUploadForm() {
     } finally {
       setTimeout(() => setSendAnimation(false), 600);
       setRequestDone(true);
+      requestDoneRef.current = true;
     }
   };
 
@@ -81,10 +84,10 @@ export default function LectureUploadForm() {
       {showOverlay && (
         <StudyLoadingOverlay
           onComplete={() => {
-            if (requestDone) setShowOverlay(false);
+            if (requestDoneRef.current) setShowOverlay(false);
             else {
               const check = setInterval(() => {
-                if (requestDone) {
+                if (requestDoneRef.current) {
                   clearInterval(check);
                   setShowOverlay(false);
                 }
