@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, forwardRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -36,9 +36,9 @@ interface Profile {
   created_at: string;
 }
 
-function StatCard({ icon: Icon, label, value, accent }: { icon: any; label: string; value: string | number; accent: string }) {
-  return (
-    <div className="relative group overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:border-primary/40 hover:shadow-glow">
+const StatCard = forwardRef<HTMLDivElement, { icon: any; label: string; value: string | number; accent: string }>(
+  ({ icon: Icon, label, value, accent }, ref) => (
+    <div ref={ref} className="relative group overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:border-primary/40 hover:shadow-glow">
       <div className={`absolute -top-10 -right-10 h-28 w-28 rounded-full ${accent} opacity-20 blur-2xl group-hover:opacity-40 transition-opacity duration-500`} />
       <div className="relative z-10 flex items-center gap-4">
         <div className={`h-12 w-12 rounded-xl ${accent} flex items-center justify-center shadow-lg`}>
@@ -50,8 +50,9 @@ function StatCard({ icon: Icon, label, value, accent }: { icon: any; label: stri
         </div>
       </div>
     </div>
-  );
-}
+  )
+);
+StatCard.displayName = "StatCard";
 
 function LiveIndicator() {
   return (
