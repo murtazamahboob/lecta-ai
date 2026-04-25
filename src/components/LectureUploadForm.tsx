@@ -6,8 +6,6 @@ import StudyLoadingOverlay from "./StudyLoadingOverlay";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-const WEBHOOK_PROD = "https://lecta.app.n8n.cloud/webhook/lecture-ghost";
-const WEBHOOK_TEST = "https://lecta.app.n8n.cloud/webhook-test/lecture-ghost";
 const ACCEPTED = ".mp3,.wav,.webm";
 
 type Status = "idle" | "loading" | "success" | "error";
@@ -53,8 +51,18 @@ export default function LectureUploadForm() {
       formData.append("emails", emails.join(","));
       formData.append("weak_points", weakPoints.trim());
 
-      const webhookUrl = isAdmin && mode === "test" ? WEBHOOK_TEST : WEBHOOK_PROD;
-      const res = await fetch(webhookUrl, { method: "POST", body: formData });
+      formData.append("mode", isAdmin && mode === "test" ? "test" : "prod");
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) throw new Error("Not authenticated");
+
+      const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/lecture-webhook`;
+      const res = await fetch(fnUrl, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
       if (!res.ok) throw new Error("Request failed");
 
       if (user) {
