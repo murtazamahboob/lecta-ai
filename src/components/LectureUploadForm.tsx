@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Upload, Send, Loader2, CheckCircle2, AlertCircle, Mic, FileAudio, Sparkles, FlaskConical, Rocket } from "lucide-react";
 import AudioRecorderCard from "./AudioRecorderCard";
 import EmailTagsInput from "./EmailTagsInput";
+import StudyLoadingOverlay from "./StudyLoadingOverlay";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -22,6 +23,8 @@ export default function LectureUploadForm() {
   const [tab, setTab] = useState<"record" | "upload">("record");
   const [sendAnimation, setSendAnimation] = useState(false);
   const [mode, setMode] = useState<"prod" | "test">("prod");
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [requestDone, setRequestDone] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const audioReady = tab === "record" ? !!audioBlob : !!uploadedFile;
@@ -35,6 +38,8 @@ export default function LectureUploadForm() {
   const handleSubmit = async () => {
     setSendAnimation(true);
     setStatus("loading");
+    setRequestDone(false);
+    setShowOverlay(true);
     try {
       const formData = new FormData();
       if (tab === "record" && audioBlob) {
@@ -67,11 +72,27 @@ export default function LectureUploadForm() {
       setStatus("error");
     } finally {
       setTimeout(() => setSendAnimation(false), 600);
+      setRequestDone(true);
     }
   };
 
   return (
     <div className="w-full max-w-lg mx-auto animate-float-up">
+      {showOverlay && (
+        <StudyLoadingOverlay
+          onComplete={() => {
+            if (requestDone) setShowOverlay(false);
+            else {
+              const check = setInterval(() => {
+                if (requestDone) {
+                  clearInterval(check);
+                  setShowOverlay(false);
+                }
+              }, 500);
+            }
+          }}
+        />
+      )}
       {/* Header */}
       <div className="text-center mb-8">
         <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl gradient-primary shadow-glow mb-4 transition-transform duration-300 hover:scale-110 hover:rotate-3">
