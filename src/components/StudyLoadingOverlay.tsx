@@ -21,24 +21,40 @@ const STAGES = [
   "📄 Polishing your PDF…",
 ];
 
-const TOTAL_SECONDS = 60;
+const TOTAL_SECONDS = 30;
+const STORAGE_KEY = "lecta_overlay_start";
+
+export const startOverlayTimer = () => {
+  localStorage.setItem(STORAGE_KEY, String(Date.now()));
+  window.dispatchEvent(new Event("lecta-overlay-change"));
+};
+
+export const stopOverlayTimer = () => {
+  localStorage.removeItem(STORAGE_KEY);
+  window.dispatchEvent(new Event("lecta-overlay-change"));
+};
+
+const getElapsed = () => {
+  const start = Number(localStorage.getItem(STORAGE_KEY) || 0);
+  if (!start) return -1;
+  return Math.floor((Date.now() - start) / 1000);
+};
 
 export default function StudyLoadingOverlay({ onComplete }: { onComplete?: () => void }) {
-  const [seconds, setSeconds] = useState(0);
+  const [seconds, setSeconds] = useState(() => Math.max(0, getElapsed()));
   const [tipIdx, setTipIdx] = useState(0);
 
   useEffect(() => {
-    const t = setInterval(() => {
-      setSeconds((s) => {
-        if (s >= TOTAL_SECONDS) {
-          clearInterval(t);
-          onComplete?.();
-          return TOTAL_SECONDS;
-        }
-        return s + 1;
-      });
-    }, 1000);
-    const tipT = setInterval(() => setTipIdx((i) => (i + 1) % TIPS.length), 6000);
+    const tick = () => {
+      const elapsed = getElapsed();
+      if (elapsed < 0) return;
+      const s = Math.min(elapsed, TOTAL_SECONDS);
+      setSeconds(s);
+      if (s >= TOTAL_SECONDS) onComplete?.();
+    };
+    tick();
+    const t = setInterval(tick, 1000);
+    const tipT = setInterval(() => setTipIdx((i) => (i + 1) % TIPS.length), 5000);
     return () => {
       clearInterval(t);
       clearInterval(tipT);
