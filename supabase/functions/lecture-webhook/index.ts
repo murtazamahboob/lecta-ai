@@ -6,8 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const WEBHOOK_PROD = "https://lecta.app.n8n.cloud/webhook/lecture-ghost";
-const WEBHOOK_TEST = "https://lecta.app.n8n.cloud/webhook-test/lecture-ghost";
+const WEBHOOK_PROD = "https://lectaai9653.app.n8n.cloud/webhook/lecture-ghost";
+const WEBHOOK_TEST = "https://lectaai9653.app.n8n.cloud/webhook-test/lecture-ghost";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
