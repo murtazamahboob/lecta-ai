@@ -2,12 +2,12 @@ import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { LogIn, Mail, Loader2, Sparkles } from "lucide-react";
+import { Mail, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Navigate } from "react-router-dom";
 
 export default function LoginPage() {
-  const { user, loading: authLoading, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
+  const { user, loading: authLoading, signInWithEmail, signUpWithEmail } = useAuth();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -61,21 +61,6 @@ export default function LoginPage() {
           <p className="text-sm text-muted-foreground">
             {mode === "signin" ? "Sign in to continue" : "Create your account"}
           </p>
-        </div>
-
-        <Button
-          onClick={signInWithGoogle}
-          className="w-full gradient-primary text-primary-foreground font-semibold gap-2 shadow-glow hover:opacity-90 transition-all duration-300 active:scale-[0.97]"
-          size="lg"
-        >
-          <LogIn className="w-4 h-4" />
-          Sign in with Google
-        </Button>
-
-        <div className="flex items-center gap-3 text-muted-foreground text-xs">
-          <div className="flex-1 h-px bg-border" />
-          <span>or use email</span>
-          <div className="flex-1 h-px bg-border" />
         </div>
 
         <form onSubmit={handleEmailAuth} className="space-y-3 text-left">
