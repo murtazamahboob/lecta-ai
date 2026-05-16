@@ -78,6 +78,7 @@ export default function AudioRecorderCard({ onAudioReady }: Props) {
           <button
             type="button"
             onClick={handleClear}
+            aria-label="Clear recording"
             className="rounded-lg border border-border p-2 text-muted-foreground hover:text-destructive hover:border-destructive transition-colors"
           >
             <Trash2 className="h-4 w-4" />
