@@ -109,7 +109,7 @@ export default function LectureUploadForm() {
         <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl gradient-primary shadow-glow mb-4 transition-transform duration-300 hover:scale-110 hover:rotate-3">
           <Sparkles className="h-7 w-7 text-primary-foreground" />
         </div>
-        <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Lecta.ai</h1>
+        <div className="text-2xl font-extrabold text-foreground tracking-tight">Lecta.ai</div>
         <p className="text-sm text-muted-foreground mt-1">Audio to smart notes, instantly</p>
       </div>
 
