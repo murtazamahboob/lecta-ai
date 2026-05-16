@@ -1,0 +1,8 @@
+# Lecta.Ai
+
+> AI-powered lecture analyzer that turns any lecture audio into exam-ready notes, web research, and practice questions delivered to your inbox.
+
+## Pages
+
+- [Home](/): Upload or record lecture audio and receive AI-analyzed notes.
+- [Sign In](/login): Sign in or create a Lecta.Ai account.
