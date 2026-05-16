@@ -104,8 +104,9 @@ export default function ProfilePage() {
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-foreground">Email</label>
+              <label htmlFor="profile-email" className="block text-sm font-medium text-foreground">Email</label>
               <input
+                id="profile-email"
                 type="email"
                 value={user?.email || ""}
                 disabled
