@@ -42,7 +42,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card/80 backdrop-blur-md">
       <div className="max-w-5xl mx-auto flex items-center justify-between h-14 px-4">
         <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2 group">
+          <Link to="/" aria-label="Lecta.ai home" className="flex items-center gap-2 group">
             <div className="h-8 w-8 rounded-lg gradient-primary flex items-center justify-center shadow-glow transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
               <Sparkles className="h-4 w-4 text-primary-foreground" />
             </div>
@@ -74,9 +74,9 @@ export default function Header() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+            <Button variant="ghost" aria-label="Open user menu" className="relative h-9 w-9 rounded-full">
               <Avatar className="h-9 w-9">
-                <AvatarImage src={avatarUrl} alt="User" />
+                <AvatarImage src={avatarUrl} alt="User profile picture" />
                 <AvatarFallback className="bg-muted text-foreground text-xs">
                   {initials}
                 </AvatarFallback>
