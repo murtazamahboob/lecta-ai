@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { LogIn, Mail, Loader2, Sparkles } from "lucide-react";
@@ -43,12 +44,20 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4 bg-background">
+      <Helmet>
+        <title>Sign In — Lecta.Ai</title>
+        <meta name="description" content="Sign in or create your Lecta.Ai account to turn lecture audio into AI-generated exam-ready notes and study materials." />
+        <link rel="canonical" href="https://lecta-ai.lovable.app/login" />
+        <meta property="og:title" content="Sign In — Lecta.Ai" />
+        <meta property="og:description" content="Sign in to Lecta.Ai to turn lecture audio into AI-generated exam-ready notes." />
+        <meta property="og:url" content="https://lecta-ai.lovable.app/login" />
+      </Helmet>
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-card text-center space-y-6 animate-float-up">
         <div className="space-y-2">
           <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl gradient-primary shadow-glow mb-2">
             <Sparkles className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-extrabold text-foreground">Lecta.ai</h1>
+          <h1 className="text-2xl font-extrabold text-foreground">Lecta.ai — AI-Powered Lecture Analyzer</h1>
           <p className="text-sm text-muted-foreground">
             {mode === "signin" ? "Sign in to continue" : "Create your account"}
           </p>
@@ -71,8 +80,9 @@ export default function LoginPage() {
 
         <form onSubmit={handleEmailAuth} className="space-y-3 text-left">
           <div className="space-y-1.5 form-field-focus">
-            <label className="text-sm font-medium text-foreground">Email</label>
+            <label htmlFor="login-email" className="text-sm font-medium text-foreground">Email</label>
             <input
+              id="login-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -82,8 +92,9 @@ export default function LoginPage() {
             />
           </div>
           <div className="space-y-1.5 form-field-focus">
-            <label className="text-sm font-medium text-foreground">Password</label>
+            <label htmlFor="login-password" className="text-sm font-medium text-foreground">Password</label>
             <input
+              id="login-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

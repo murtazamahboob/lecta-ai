@@ -10,6 +10,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function EmailTagsInput({ emails, onChange }: Props) {
   const [input, setInput] = useState("");
+  const inputId = "email-tags-input";
   const [error, setError] = useState("");
 
   const addEmail = (value: string) => {
@@ -44,7 +45,7 @@ export default function EmailTagsInput({ emails, onChange }: Props) {
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-foreground">
+      <label htmlFor={inputId} className="block text-sm font-medium text-foreground">
         Recipient Emails
       </label>
       <div className="flex flex-wrap gap-2 rounded-lg border border-border bg-muted/50 p-3 focus-within:ring-2 focus-within:ring-ring transition-all">
@@ -57,6 +58,7 @@ export default function EmailTagsInput({ emails, onChange }: Props) {
             <button
               type="button"
               onClick={() => removeEmail(email)}
+              aria-label={`Remove ${email}`}
               className="rounded-full p-0.5 hover:bg-primary-foreground/20 transition-colors"
             >
               <X className="h-3 w-3" />
@@ -64,6 +66,7 @@ export default function EmailTagsInput({ emails, onChange }: Props) {
           </span>
         ))}
         <input
+          id={inputId}
           type="email"
           value={input}
           onChange={(e) => { setInput(e.target.value); setError(""); }}

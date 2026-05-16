@@ -1,9 +1,18 @@
 import LectureUploadForm from "@/components/LectureUploadForm";
 import { Sparkles, Mic, Brain, Globe2, FileCheck2 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 
 export default function Index() {
   return (
     <main className="relative overflow-hidden">
+      <Helmet>
+        <title>Lecta.Ai — Turn Lectures into Exam-Ready Notes with AI</title>
+        <meta name="description" content="Lecta.Ai turns any lecture into exam-ready notes instantly. Upload or record audio to get AI-analyzed summaries, web research, and practice questions." />
+        <link rel="canonical" href="https://lecta-ai.lovable.app/" />
+        <meta property="og:title" content="Lecta.Ai — Turn Lectures into Exam-Ready Notes" />
+        <meta property="og:description" content="Upload or record any lecture audio and get AI-analyzed notes, web research, and exam-ready questions delivered to your inbox." />
+        <meta property="og:url" content="https://lecta-ai.lovable.app/" />
+      </Helmet>
       {/* Background grid + dots */}
       <div className="absolute inset-0 grid-bg pointer-events-none opacity-60" />
       <div className="absolute top-24 right-8 w-32 h-32 dot-pattern opacity-70 pointer-events-none hidden md:block" />
@@ -27,7 +36,7 @@ export default function Index() {
           exam questions, and a polished PDF — delivered to your inbox.
         </p>
 
-        <p className="mt-6 text-xs text-muted-foreground/80">
+        <p className="mt-6 text-xs text-muted-foreground">
           No credit card required &nbsp;·&nbsp; Free to try &nbsp;·&nbsp; PDF delivered in minutes
         </p>
       </section>
@@ -40,7 +49,7 @@ export default function Index() {
       {/* How it works */}
       <section className="relative px-4 pb-20 max-w-6xl mx-auto">
         <div className="text-center mb-10">
-          <p className="text-xs font-semibold tracking-[0.3em] text-primary uppercase">How It Works</p>
+          <h2 className="text-xs font-semibold tracking-[0.3em] text-primary uppercase">How It Works</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[
@@ -63,7 +72,7 @@ export default function Index() {
           ))}
         </div>
 
-        <p className="text-center text-xs text-muted-foreground/70 mt-12">
+        <p className="text-center text-xs text-muted-foreground mt-12">
           Powered by GPT &nbsp;·&nbsp; Groq Whisper &nbsp;·&nbsp; Wikipedia &nbsp;·&nbsp; Tavily &nbsp;·&nbsp; PDF Endpoint
         </p>
       </section>
