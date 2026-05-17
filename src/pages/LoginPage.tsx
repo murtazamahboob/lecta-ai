@@ -5,24 +5,33 @@ import { Button } from "@/components/ui/button";
 import { Mail, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Navigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function LoginPage() {
   const { user, loading: authLoading, signInWithEmail, signUpWithEmail } = useAuth();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!email) return;
+    if (mode !== "forgot" && !password) return;
     setLoading(true);
     try {
       if (mode === "signup") {
         await signUpWithEmail(email, password);
         toast.success("Check your email to verify your account");
-      } else {
+      } else if (mode === "signin") {
         await signInWithEmail(email, password);
+      } else {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast.success("Password reset link sent — check your email");
+        setMode("signin");
       }
     } catch (err: any) {
       toast.error(err.message || "Authentication failed");
@@ -59,7 +68,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-2xl font-extrabold text-foreground">Lecta.ai — AI-Powered Lecture Analyzer</h1>
           <p className="text-sm text-muted-foreground">
-            {mode === "signin" ? "Sign in to continue" : "Create your account"}
+            {mode === "signin" ? "Sign in to continue" : mode === "signup" ? "Create your account" : "Reset your password"}
           </p>
         </div>
 
@@ -76,6 +85,7 @@ export default function LoginPage() {
               className="w-full rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring transition-all duration-300"
             />
           </div>
+          {mode !== "forgot" && (
           <div className="space-y-1.5 form-field-focus">
             <label htmlFor="login-password" className="text-sm font-medium text-foreground">Password</label>
             <input
@@ -89,14 +99,24 @@ export default function LoginPage() {
               className="w-full rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring transition-all duration-300"
             />
           </div>
+          )}
           <Button type="submit" disabled={loading} variant="secondary" className="w-full gap-2 transition-all duration-300 active:scale-[0.97]">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-            {mode === "signin" ? "Sign in with Email" : "Sign up with Email"}
+            {mode === "signin" ? "Sign in with Email" : mode === "signup" ? "Sign up with Email" : "Send reset link"}
           </Button>
+          {mode === "signin" && (
+            <button type="button" onClick={() => setMode("forgot")} className="text-xs text-primary hover:underline font-medium">
+              Forgot password?
+            </button>
+          )}
         </form>
 
         <p className="text-xs text-muted-foreground">
-          {mode === "signin" ? (
+          {mode === "forgot" ? (
+            <button onClick={() => setMode("signin")} className="text-primary hover:underline font-medium">
+              Back to sign in
+            </button>
+          ) : mode === "signin" ? (
             <>
               Don't have an account?{" "}
               <button onClick={() => setMode("signup")} className="text-primary hover:underline font-medium">
