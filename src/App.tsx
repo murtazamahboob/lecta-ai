@@ -11,6 +11,7 @@ import AdminPage from "./pages/AdminPage.tsx";
 import HistoryPage from "./pages/HistoryPage.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
 import ProfilePage from "./pages/ProfilePage.tsx";
+import ResetPasswordPage from "./pages/ResetPasswordPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
                 <Route path="/" element={<Index />} />
