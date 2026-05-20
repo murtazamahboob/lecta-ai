@@ -23,6 +23,8 @@ export default function LectureUploadForm() {
   const [mode, setMode] = useState<"prod" | "test">("prod");
   const [showOverlay, setShowOverlay] = useState(false);
   const [requestDone, setRequestDone] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const requestDoneRef = useRef(false);
 
@@ -39,6 +41,8 @@ export default function LectureUploadForm() {
     setStatus("loading");
     setRequestDone(false);
     requestDoneRef.current = false;
+    setUploadProgress(0);
+    setIsUploading(true);
     setShowOverlay(true);
     try {
       const formData = new FormData();
@@ -58,12 +62,23 @@ export default function LectureUploadForm() {
       if (!token) throw new Error("Not authenticated");
 
       const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/lecture-webhook`;
-      const res = await fetch(fnUrl, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", fnUrl);
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            setUploadProgress(Math.round((e.loaded / e.total) * 100));
+          }
+        };
+        xhr.upload.onload = () => setUploadProgress(100);
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) resolve();
+          else reject(new Error("Request failed"));
+        };
+        xhr.onerror = () => reject(new Error("Network error"));
+        xhr.send(formData);
       });
-      if (!res.ok) throw new Error("Request failed");
 
       if (user) {
         const audioName = tab === "record" ? "recording.webm" : (uploadedFile?.name || "upload");
@@ -84,6 +99,7 @@ export default function LectureUploadForm() {
       setTimeout(() => setSendAnimation(false), 600);
       setRequestDone(true);
       requestDoneRef.current = true;
+      setIsUploading(false);
     }
   };
 
